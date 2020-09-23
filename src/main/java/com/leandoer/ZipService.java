@@ -1,53 +1,39 @@
 package com.leandoer;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class ZipService {
 	static final Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	public static final byte[] BUFFER = new byte[1024];
+	static final Path CURRENT_RELATIVE_PATH = Paths.get("");
 
-
-	public void pack(Path name, Path... paths) {
-		deleteFileIfExists(name);
-		logger.finer("Creating new archive... " + name.toAbsolutePath());
-		createOrUpdate(name, paths);
+	public void pack(String name, String... filenames) {
+		Path path = normalizePath(name);
+		Path[] paths = normalizePaths(filenames);
+		logger.finer("Creating new archive... " + path.toAbsolutePath());
+		try (ZipOutputStream z = new ZipOutputStream(new FileOutputStream(name.toString()));){
+			addAllFilesToZip(z, path, paths);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 	}
 
-	public void deleteFileIfExists(Path name) {
-		if (Files.exists(name)) {
-			try {
-				logger.finer("Deleting old archive... " + name.toAbsolutePath());
-				Files.delete(name);
-
-			} catch (IOException ex) {
-				logger.warning("Error: " + ex.getMessage());
-				logger.log(Level.FINEST, ex.getMessage(), ex);
-			}
-		}
-	}
-
-
-	public void createOrUpdate(Path name, Path... paths) {
-		if (paths.length == 0) {
-			paths = new Path[]{Paths.get("").toAbsolutePath()};
-		}
-		try (ZipOutputStream z = new ZipOutputStream(new FileOutputStream(name.toString()))) {
+	public void addAllFilesToZip(ZipOutputStream z, Path name, Path... paths) {
+		try {
 			byte[] array;
 			for (Path root : paths) {
 				List<Path> val = Files.walk(root)
@@ -70,12 +56,47 @@ public class ZipService {
 		}
 	}
 
+	public void writeAllData(InputStream inputStream, OutputStream outputStream) throws IOException{
+		int length;
+		while ((length = inputStream.read(BUFFER))!=-1){
+			outputStream.write(BUFFER, 0, length);
+		}
+	}
 
-	public void unpack(Path name, Path... destination) {
+
+	public void update(String name, String... filenames){
+		Path path = normalizePath(name);
+		Path[] paths = normalizePaths(filenames);
+		File f = new File("~~temp.zip");
+		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(f))){
+			ZipFile zipFile = new ZipFile(name.toString());
+			Enumeration<? extends ZipEntry> entries= zipFile.entries();
+			while (entries.hasMoreElements()){
+				ZipEntry e = entries.nextElement();
+				zos.putNextEntry(e);
+				InputStream is = zipFile.getInputStream(e);
+				writeAllData(is, zos);
+				zos.closeEntry();
+				is.close();
+			}
+			addAllFilesToZip(zos, path, paths);
+			zipFile.close();
+			zos.close();
+			Files.copy(f.toPath(), path, StandardCopyOption.REPLACE_EXISTING);
+			f.delete();
+		} catch(IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	public void unpack(String name, String... filenames) {
+		Path path = normalizePath(name);
+		Path[] destination = normalizePaths(filenames);
 		Path root;
 		if (destination.length == 0) {
 			root = Paths.get(Paths.get("").toAbsolutePath().toString(),
-					name.getFileName().toString().split("\\.")[0]);
+					path.getFileName().toString().split("\\.")[0]);
 		} else if (destination.length == 1) {
 			root = destination[0];
 		} else {
@@ -85,14 +106,12 @@ public class ZipService {
 							.collect(Collectors.joining(", "))
 			);
 		}
-		logger.finer("Unpacking archive... " + name.toAbsolutePath());
+		logger.finer("Unpacking archive... " + path.toAbsolutePath());
 		try (ZipInputStream z = new ZipInputStream(new FileInputStream(name.toString()))) {
 			byte[] buffer = new byte[1024];
 			ZipEntry next;
 			FileOutputStream fos;
 			while ((next = z.getNextEntry()) != null) {
-				int length;
-
 				Path current = Paths.get(root.toString(), next.toString());
 				logger.finer("Unpacking file: " + current);
 				if (!Files.exists(current)) {
@@ -102,10 +121,7 @@ public class ZipService {
 					Files.createFile(current);
 				}
 				fos = new FileOutputStream(current.toString());
-				while ((length = z.read(buffer)) > 0) {
-					fos.write(buffer, 0, length);
-				}
-
+				writeAllData(z, fos);
 				z.closeEntry();
 				fos.close();
 			}
@@ -117,34 +133,39 @@ public class ZipService {
 	}
 
 
-	public void remove(Path name, Path... filenames) {
-		Path currentRoot = Paths.get(Paths.get("").toAbsolutePath().toString(),
-				name.getFileName().toString().split("\\.")[0]);
-		logger.finer("Temporarily unpacking archive...");
-		unpack(name);
-
-		for (Path filename : filenames) {
-			Path currentFile = currentRoot.toAbsolutePath().resolve(filename);
-			if (Files.exists(currentFile)) {
-				try {
-					logger.finer("Deleting file: " + currentFile);
-					deleteFolderRecursively(currentFile);
-				} catch (IOException ex) {
-					logger.warning("Error: " + ex.getMessage());
-					logger.log(Level.FINEST, ex.getMessage(), ex);
-				}
+	public boolean isRemoved(ZipEntry e, String...filenames){
+		for (String filename : filenames){
+			if (e.toString().startsWith(filename)){
+				System.out.println(e);
+				return true;
 			}
 		}
-		try {
-			Path[] filesToZip = Files.find(currentRoot, 1, (file, attributes) -> true).skip(1).toArray(Path[]::new);
-			pack(name, filesToZip);
-			logger.finer("Removing temporary folder: " + currentRoot);
-			deleteFolderRecursively(currentRoot);
-		} catch (IOException ex) {
-			logger.warning("Error: " + ex.getMessage());
-			logger.log(Level.FINEST, ex.getMessage(), ex);
-		}
+		return false;
+	}
 
+	public void remove(String name, String... filenames) {
+		Path path = normalizePath(name);
+		File f = new File("~~temp.zip");
+		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(f))){
+			ZipFile zipFile = new ZipFile(name.toString());
+			Enumeration<? extends ZipEntry> entries= zipFile.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry e = entries.nextElement();
+				if (!isRemoved(e, filenames)) {
+					zos.putNextEntry(e);
+					InputStream is = zipFile.getInputStream(e);
+					writeAllData(is, zos);
+					zos.closeEntry();
+					is.close();
+				}
+			}
+			zipFile.close();
+			zos.close();
+			Files.copy(f.toPath(), path, StandardCopyOption.REPLACE_EXISTING);
+			f.delete();
+		} catch(IOException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	public void deleteFolderRecursively(Path folder) throws IOException {
@@ -152,6 +173,12 @@ public class ZipService {
 				.sorted(Comparator.reverseOrder())
 				.map(Path::toFile)
 				.forEach(File::delete);
+	}
+	public Path normalizePath(String path){
+		return CURRENT_RELATIVE_PATH.toAbsolutePath().resolve(path).normalize();
+	}
+	public Path[] normalizePaths(String[] paths){
+		return Arrays.stream(paths).map(path -> normalizePath(path)).toArray(Path[]::new);
 	}
 
 }

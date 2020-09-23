@@ -6,7 +6,6 @@ import com.leandoer.parserchain.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class Application {
@@ -37,7 +36,6 @@ public class Application {
 		CLIFilter functionFilter = new FunctionFilter(loggingFilter, new ZipService());
 		CLIFilter primaryFilter = new PrimaryFilter(functionFilter);
 		primaryFilter.doSetup(Arrays.stream(args).collect(Collectors.toCollection(LinkedList::new)), applicationContext);
-		System.out.println(Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).getLevel());
 	}
 
 }

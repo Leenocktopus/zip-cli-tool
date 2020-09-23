@@ -2,7 +2,6 @@ package com.leandoer;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.logging.LogManager;
 
@@ -18,31 +17,31 @@ public class CLIContext {
         }
     }
 
-    private BiConsumer<Path, Path[]> function;
-    private Path archiveName;
-    private Path[] filenames;
+    private BiConsumer<String, String[]> function;
+    private String archiveName;
+    private String[] filenames;
 
-    public BiConsumer<Path, Path[]> getFunction() {
+    public BiConsumer<String, String[]> getFunction() {
         return function;
     }
 
-    public void setFunction(BiConsumer<Path, Path[]> function) {
+    public void setFunction(BiConsumer<String, String[]> function) {
         this.function = function;
     }
 
-    public Path getArchiveName() {
+    public String getArchiveName() {
         return archiveName;
     }
 
-    public void setArchiveName(Path archiveName) {
+    public void setArchiveName(String archiveName) {
         this.archiveName = archiveName;
     }
 
-    public Path[] getFilenames() {
+    public String[] getFilenames() {
         return filenames;
     }
 
-    public void setFilenames(Path[] filenames) {
+    public void setFilenames(String[] filenames) {
         this.filenames = filenames;
     }
 }

@@ -3,7 +3,6 @@ package com.leandoer.parserchain;
 import com.leandoer.CLIContext;
 import com.leandoer.ZipService;
 
-import java.nio.file.Path;
 import java.util.Queue;
 import java.util.function.BiConsumer;
 
@@ -18,7 +17,7 @@ public class FunctionFilter extends CLIFilter {
 
     @Override
     protected void doFilterSpecific(Queue<String> args, CLIContext cliContext) {
-        BiConsumer<Path, Path[]> consumer = null;
+        BiConsumer<String, String[]> consumer = null;
         String argument = args.poll();
         switch (argument) { //We can be sure that argument is not null because of previous filter
             case "-a":
@@ -28,7 +27,7 @@ public class FunctionFilter extends CLIFilter {
                 consumer = (name, paths) -> zipService.unpack(name, paths);
                 break;
             case "-u":
-                consumer = (name, paths) -> zipService.createOrUpdate(name, paths);
+                consumer = (name, paths) -> zipService.update(name, paths);
                 break;
             case "-d":
                 consumer = (name, paths) -> zipService.remove(name, paths);
