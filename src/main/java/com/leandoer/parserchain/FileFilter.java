@@ -13,17 +13,10 @@ public class FileFilter extends CLIFilter {
 
 	@Override
 	protected void doFilterSpecific(Queue<String> args, CLIContext cliContext) {
-		//Queue<Path> paths = normalizePaths(args);
 		String zipName = args.poll();
 		String[] files = args.toArray(new String[]{});
 
 		cliContext.setArchiveName(zipName);
 		cliContext.setFilenames(files);
 	}
-
-	/*public Queue<Path> normalizePaths(Queue<String> args) {
-		return args.stream()
-				.map(path -> CURRENT_RELATIVE_PATH.toAbsolutePath().resolve(path).normalize())
-				.collect(Collectors.toCollection(LinkedList::new));
-	}*/
 }

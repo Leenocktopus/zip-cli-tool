@@ -28,8 +28,8 @@ public class ZipService {
 		Path path = normalizePath(name);
 		Path[] paths = normalizePaths(filenames);
 		if (Files.exists(path)) {
-			logger.warning("You are about to override existing archive: " + path);
-			logger.warning("Please, confirm operation: Y/[N]");
+			System.out.println("You are about to override existing archive: " + path);
+			System.out.println("Please, confirm operation: Y/[N]" + path);
 			Scanner sc = new Scanner(System.in);
 			if (!sc.nextLine().matches("[Yy]")) {
 				return;
@@ -105,17 +105,19 @@ public class ZipService {
 			FileOutputStream fos;
 			while ((next = z.getNextEntry()) != null) {
 				Path current = Paths.get(root.toString(), next.toString());
-				logger.fine("Unpacking file: " + current);
-				if (!Files.exists(current)) {
-					if (current.getParent() != null) {
-						Files.createDirectories(current.getParent());
+				logger.fine("Unpacking file: " + current + " "+ next.isDirectory());
+				if (!next.isDirectory()){
+					if (!Files.exists(current)) {
+						if (current.getParent() != null) {
+							Files.createDirectories(current.getParent());
+						}
+						Files.createFile(current);
 					}
-					Files.createFile(current);
+					fos = new FileOutputStream(current.toString());
+					writeAllData(z, fos);
+					z.closeEntry();
+					fos.close();
 				}
-				fos = new FileOutputStream(current.toString());
-				writeAllData(z, fos);
-				z.closeEntry();
-				fos.close();
 			}
 			logger.fine("Unpacked archive: " + root);
 		} catch (IOException ex) {
@@ -136,8 +138,8 @@ public class ZipService {
 
 
 
-	protected String getTempFile(String suffix) throws IOException {
-		return Files.createTempFile("file", ".zip").toAbsolutePath().toString();
+	protected String getTempFile(String prefix) throws IOException {
+		return Files.createTempFile(prefix, ".zip").toAbsolutePath().toString();
 	}
 
 	protected void modifyEntryList(Path path, Path[] pathsToAdd, Path[] pathsToRemove){

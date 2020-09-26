@@ -3,30 +3,12 @@ package com.leandoer;
 
 import com.leandoer.parserchain.*;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 public class Application {
 
-	/**
-	 * Flags:
-	 * -d deletion
-	 *
-	 * @param args - command line arguments
-	 * @see ZipService#remove(Path, Path...)
-	 * -a archivation
-	 * @see ZipService#pack(Path, Path...)
-	 * -n unarchivation
-	 * @see ZipService#unpack(Path, Path...)
-	 * -u update
-	 * @see ZipService#createOrUpdate(Path, Path...)
-	 * --verbose
-	 * --debug
-	 * --help
-	 * --version
-	 */
 	public static void main(String[] args) {
 		CLIContext applicationContext = new CLIContext();
 		CLIFilter executionFilter = new ExecutionFilter(null);
