@@ -2,6 +2,7 @@ package com.leandoer.parserchain;
 
 import com.leandoer.CLIContext;
 
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -19,14 +20,13 @@ public class LoggingFilter extends CLIFilter {
         String argument = args.peek();
         if ("-verbose".equals(argument) || "-debug".equals(argument)) {
             args.poll();
-            Handler consoleHandler = new ConsoleHandler();
             Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-            Level level = "-verbose".equals(argument) ? Level.FINER : Level.FINEST;
+            Arrays.stream(logger.getHandlers()).forEach(logger::removeHandler);
+            Level level = "-verbose".equals(argument) ? Level.FINE : Level.FINER;
+            Handler consoleHandler = new ConsoleHandler();
             consoleHandler.setLevel(level);
             logger.setLevel(level);
             logger.addHandler(consoleHandler);
-
         }
-
     }
 }

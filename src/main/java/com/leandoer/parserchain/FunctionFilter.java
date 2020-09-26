@@ -19,7 +19,8 @@ public class FunctionFilter extends CLIFilter {
     protected void doFilterSpecific(Queue<String> args, CLIContext cliContext) {
         BiConsumer<String, String[]> consumer = null;
         String argument = args.poll();
-        switch (argument) { //We can be sure that argument is not null because of previous filter
+        // can't produce null pointer exception because PrimaryFilter will stop filter chain in the case of null
+        switch (argument) {
             case "-a":
                 consumer = (name, paths) -> zipService.pack(name, paths);
                 break;
@@ -33,7 +34,7 @@ public class FunctionFilter extends CLIFilter {
                 consumer = (name, paths) -> zipService.remove(name, paths);
                 break;
             default:
-                throw new RuntimeException("Function argument should be one of [-anud], instead got: " + argument);
+                throw new RuntimeException("Option should be one of [-anud], instead got: " + argument);
         }
         cliContext.setFunction(consumer);
     }

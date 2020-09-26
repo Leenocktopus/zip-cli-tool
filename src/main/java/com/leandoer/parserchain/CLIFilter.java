@@ -20,7 +20,7 @@ public abstract class CLIFilter {
             }
         } catch (RuntimeException ex) {
             if (ex.getMessage() != null) {
-                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("Error1: " + ex.getMessage());
+                Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).warning("Error: " + ex.getMessage());
             }
         }
     }
