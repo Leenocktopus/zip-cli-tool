@@ -16,11 +16,11 @@ public class PrimaryFilter extends CLIFilter {
 	protected void doFilterSpecific(Queue<String> args, CLIContext cliContext) {
 		String argument = args.peek();
 		if (argument == null || argument.equals("-help")) {
-			logger.info(String.format("%6s zip [options] \n \t(to execute one of commands)", "Usage:"));
+			logger.info(String.format("%6s zip [command] \n \t(to execute one of commands)", "Usage:"));
 			logger.info(String.format("%6s zip [options] [zip archive] [filename1, filename2, ...]\n \t(to execute archiver commands)", "or"));
 			logger.info("\nwhere commands include:\n");
-			logger.info(String.format("\t %s \t print help message to the output stream", "-info "));
-			logger.info(String.format("\t %s \t print product version and developer to the output and exit", "-version"));
+			logger.info(String.format("\t %s \t print information about commands to the output stream", "-help"));
+			logger.info(String.format("\t %s \t print product version and developer to the output stream and exit", "-version"));
 			logger.info("\nwhere options include:\n");
 			logger.info(String.format("\t %s \t enable verbose output", "-verbose"));
 			logger.info(String.format("\t %s \t enable debug output\n", "-debug"));
