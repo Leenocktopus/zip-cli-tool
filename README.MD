@@ -1,6 +1,7 @@
 ## Java CLI zip archiver 
 
-####General
+#### General
+
 Java CLI zip archiver is a very basic tool to compress and decompress files on 
 Windows operating system. It has not been tested on other operating systems and 
 thus it's usage may produce unexpected results. 
@@ -21,7 +22,7 @@ provide an absolute path if batch file location isn't the `target` folder):
 A folder with the batch file can be added to the `PATH` environment variable 
 in order to use `zip` command regardless of the current directory in cmd.
 
-####Usage
+#### Usage
 Control over the specific operation and it's parameters is performed by supplying
 command arguments to the `zip` command. General structure of the commands are as follows:
 
